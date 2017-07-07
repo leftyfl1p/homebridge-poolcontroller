@@ -56,8 +56,9 @@ PoolCircuitAccessory.prototype.updateCircuitState = function(circuitState) {
     // since this is being called internally (via the socket initiation), call the function that will call the callback
   this.accessory.getService(Service.Switch).setCharacteristic(Characteristic.On, circuitState)
 
-  //  this.accessory.getService(Service.Switch).getCharacteristic(Characteristic.On).setValue(circuitState)
-//    this.accessory.getService(Service.Switch).getCharacteristic(Characteristic.On).updateValue(circuitState);
+   // this.accessory.getService(Service.Switch).getCharacteristic(Characteristic.On).setValue(circuitState) // works
+    //this.accessory.getService(Service.Switch).getCharacteristic(Characteristic.On).updateValue(circuitState); // works
+    //this.service.getCharacteristic(Characteristic.On).setValue(this.circuitState); // works 
 
   } else {
     //console.log("No change in state for %s", this.accessory.displayName)

@@ -6,17 +6,14 @@
   "keywords": [
     "homebridge-plugin"
   ],
-
   "repository": {
     "type": "git",
     "url": "git://github.com/leftyfl1p/homebridge-poolcontroller.git"
   },
-
   "engines": {
     "node": ">=0.12.0",
     "homebridge": ">=0.2.0"
   },
-
   "dependencies": {
     "socket.io-client": "^1.7.3"
   }

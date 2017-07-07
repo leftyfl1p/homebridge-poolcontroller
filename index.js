@@ -92,7 +92,8 @@ PoolControllerPlatform.prototype.InitialData = function(data) {
             this.log("Found circuit " + circuitName + " with identifier: " + id);
             console.log('cachedAccessory', cachedAccessory)
             // Add heater accessory
-            if (circuitFunction === "Pool" || circuitFunction === "Spa") {
+            this.log("circuitFunction is " + circuitFunction);
+            if (circuitFunction === "pool" || circuitFunction === "spa") {
               console.log('adding %s heater function', circuitFunction)
                 var temperatures = data.temperatures;
                 var heaterActive = temperatures.heaterActive;
@@ -104,7 +105,7 @@ PoolControllerPlatform.prototype.InitialData = function(data) {
                 if (cachedAccessory === undefined) {
                     this.addHeaterAccessory(this.log, id, circuitName, circuitFunction, circuitNumber, circuitState, heatMode, targetHeatingCoolingState, currentTemperature, targetTemperature, socket);
                 } else {
-                    this.accessories[uuid] = new heaterAccessory(this.log, cachedAccessory, circuitFunction, circuitNumber, circuitState, heatMode, targetHeatingCoolingState, currentTemperature, targetTemperature, Homebridge); //change heatmode to heater active later
+                    this.accessories[uuid] = new heaterAccessory(this.log, cachedAccessory, circuitFunction, circuitNumber, circuitState, heatMode, targetHeatingCoolingState, currentTemperature, targetTemperature, Homebridge, socket); //change heatmode to heater active later
                 }
 
             } else {

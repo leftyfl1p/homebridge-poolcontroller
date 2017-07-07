@@ -1,6 +1,24 @@
 var Accessory, Service, Characteristic, UUIDGen;
 var debug = true;
 
+function fahrenheitToCelsius(fahrenheit) {
+    return (fahrenheit - 32) * 5 / 9;
+}
+
+function celsiusToFahrenheit(celsius) {
+    return celsius * 9 / 5 + 32;
+}
+
+function targetHeatingCoolingStateForHeatModeAndCircuitState(heatMode, circuitState) {
+    if (heatMode && circuitState) {
+        return Characteristic.TargetHeatingCoolingState.HEAT;
+    } else if (!heatMode && circuitState) {
+        return Characteristic.TargetHeatingCoolingState.AUTO;
+    }
+
+    return Characteristic.TargetHeatingCoolingState.OFF;
+};
+
 var HeaterAccessory = function(log, accessory, circuitFunction, circuit, circuitState, heatMode, targetHeatingCoolingState, currentTemperature, targetTemperature, homebridge, socket) {
     Accessory = homebridge.platformAccessory;
     Service = homebridge.hap.Service;
@@ -50,7 +68,7 @@ var HeaterAccessory = function(log, accessory, circuitFunction, circuit, circuit
     }
 
     // Subscribe to temperature updates.
-    this.socket.on('temp', this.socketTemperaturesUpdated.bind(this));
+    socket.on('temp', this.socketTemperaturesUpdated.bind(this));
 }
 
 HeaterAccessory.prototype.getTemperatureDisplayUnits = function(callback) {

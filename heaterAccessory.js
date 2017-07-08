@@ -6,7 +6,7 @@ function fahrenheitToCelsius(fahrenheit) {
 }
 
 function celsiusToFahrenheit(celsius) {
-    return celsius * 9 / 5 + 32;
+    return Math.round( celsius * 9 / 5 + 32 );
 }
 
 function targetHeatingCoolingStateForHeatModeAndCircuitState(heatMode, circuitState) {
@@ -51,11 +51,10 @@ var HeaterAccessory = function(log, accessory, circuitFunction, circuit, circuit
             .on('set', this.setTargetHeatingCoolingState.bind(this))
             .on('get', this.getTargetHeatingCoolingState.bind(this));
 
-        // disable until setpoint sockets are fixed
-        // this.service
-        // .getCharacteristic(Characteristic.TargetTemperature)
-        // .on('set', this.setTargetTemperature.bind(this))
-        // .on('get', this.getTargetTemperature.bind(this));
+        this.service
+        .getCharacteristic(Characteristic.TargetTemperature)
+        .on('set', this.setTargetTemperature.bind(this))
+        .on('get', this.getTargetTemperature.bind(this));
 
         this.service
             .getCharacteristic(Characteristic.CurrentTemperature)
@@ -130,15 +129,18 @@ HeaterAccessory.prototype.getCurrentHeatingCoolingState = function(callback) {
 };
 
 HeaterAccessory.prototype.setTargetTemperature = function(targetTemperature, callback) {
-    //this.log("setTargetTemperature: " + celsiusToFahrenheit(targetTemperature));
     this.targetTemperature = targetTemperature;
-    this.socket.emit(this.circuitFunction + "setpoint", celsiusToFahrenheit(this.targetTemperature));
+
+    //circuitfunc is 'pool' when we need 'Pool'. need to standardize naming conventions?
+    var tempCircuitFuncName = this.circuitFunction.charAt(0).toUpperCase() + this.circuitFunction.slice(1);
+
+    this.socket.emit("set" + tempCircuitFuncName + "SetPoint", celsiusToFahrenheit(this.targetTemperature));
     if (callback) callback(null, this.targetTemperature);
 };
 
 HeaterAccessory.prototype.getTargetTemperature = function(callback) {
-    this.log("TARGET TEMPERATURE: " + this.targetTemperature);
-    if (callback) callback(null, this.targetTemperature > 100 ? 100 : this.targetTemperature); // HomeKit/the home app doesn't understand target temperatures >100.
+    //this.log("TARGET TEMPERATURE: " + this.targetTemperature);
+    if (callback) callback(null,  this.targetTemperature);
 };
 
 HeaterAccessory.prototype.getCurrentTemperature = function(callback) {
@@ -146,7 +148,7 @@ HeaterAccessory.prototype.getCurrentTemperature = function(callback) {
 };
 
 HeaterAccessory.prototype.socketTemperaturesUpdated = function(data) {
-    this.heatMode = data[this.circuitFunction + "HeatMode"] == 1 ? 1 : 0; // data.heaterActive; broken right now so change later
+    this.heatMode = data[this.circuitFunction + "HeatMode"] == 1 ? 1 : 0; // data.heaterActive; broken right now
 
     var currentTemperature = data[this.circuitFunction + "Temp"];
     var targetTemperature = data[this.circuitFunction + "SetPoint"];
@@ -156,6 +158,9 @@ HeaterAccessory.prototype.socketTemperaturesUpdated = function(data) {
 
     this.updateTargetHeatingCoolingState();
     this.updateCurrentHeatingCoolingState();
+
+    this.service.getCharacteristic(Characteristic.CurrentTemperature).updateValue(this.currentTemperature);
+    this.service.getCharacteristic(Characteristic.TargetTemperature).updateValue(this.targetTemperature);
 };
 
 HeaterAccessory.prototype.updateCurrentHeatingCoolingState = function() {

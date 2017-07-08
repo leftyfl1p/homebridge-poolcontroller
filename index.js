@@ -5,14 +5,6 @@ var debug = true;
 var circuitAccessory = require('./circuitAccessory.js');
 var heaterAccessory = require('./heaterAccessory.js');
 
-function fahrenheitToCelsius(fahrenheit) {
-    return (fahrenheit - 32) * 5 / 9;
-}
-
-function celsiusToFahrenheit(celsius) {
-    return celsius * 9 / 5 + 32;
-}
-
 function targetHeatingCoolingStateForHeatModeAndCircuitState(heatMode, circuitState) {
     if (heatMode && circuitState) {
         return Characteristic.TargetHeatingCoolingState.HEAT;
@@ -60,10 +52,10 @@ PoolControllerPlatform.prototype.socketInit = function() {
         rejectUnauthorized: false
     });
 
-
+    // will eventually change to 'all' instead of 'one'
     socket.on('one', function(data) {
         console.log('got data');
-        self.InitialData(data); // will eventually change to 'all' instead of 'one'
+        self.InitialData(data); 
     });
 
 };
@@ -166,6 +158,8 @@ PoolControllerPlatform.prototype.addHeaterAccessory = function(log, identifier, 
     var uuid = UUIDGen.generate(identifier);
     var accessory = new Accessory(accessoryName, uuid);
     accessory.addService(Service.Thermostat, accessoryName);
+
+    accessory.getService(Service.AccessoryInformation).setCharacteristic(Characteristic.Manufacturer, "Pentair");
 
     this.accessories[uuid] = new heaterAccessory(log, accessory, type, circuit, circuitState, heatMode, targetHeatingCoolingState, currentTemperature, targetTemperature, Homebridge, socket);
     this.api.registerPlatformAccessories("homebridge-PoolControllerPlatform", "PoolControllerPlatform", [accessory]);

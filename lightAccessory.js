@@ -12,7 +12,7 @@ var PoolCircuitAccessory = function(log, accessory, circuit, circuitState, homeb
   this.log = log;
   this.circuit = circuit;
   this.circuitState = circuitState;
-  this.service = accessory.getService(Service.Switch);
+  this.service = this.accessory.getService(Service.Lightbulb);
   this.socket = socket;
 
   if (this.service) {
@@ -22,18 +22,18 @@ var PoolCircuitAccessory = function(log, accessory, circuit, circuitState, homeb
       .on('get', this.getCircuitState.bind(this));
   }
 
-  // not needed/used with latest HomeKit API's
-  // accessory.updateReachability(true);
+  accessory.updateReachability(true);
 }
 
 PoolCircuitAccessory.prototype.setCircuitState = function(circuitState, callback) {
   if (this.circuitState !== circuitState) {
 
-    this.log("Setting Circuit", this.accessory.displayName, "to", circuitState);
+    var circuitStateBinary = circuitState ? 1 : 0;
+    this.log("Setting Circuit", this.accessory.displayName, "to", circuitStateBinary);
     this.socket.emit("toggleCircuit", this.circuit);
     //this.updateCircuitState(circuitState);
     //this following line will update the value without the internal callback to getCircuitState
-    this.accessory.getService(Service.Switch).getCharacteristic(Characteristic.On).updateValue(circuitState);
+    //this.accessory.getService(Service.Lightbulb).getCharacteristic(Characteristic.On).updateValue(circuitState);
 
   }
 
@@ -48,14 +48,14 @@ PoolCircuitAccessory.prototype.getCircuitState = function(callback) {
 // For when state is changed elsewhere.
 PoolCircuitAccessory.prototype.updateCircuitState = function(circuitState) {
   if (this.circuitState !== circuitState) {
-    this.log("Update Circuit State for %s (state: %s-->%s)", this.accessory.displayName, this.circuitState, circuitState)
+    this.log("Update Light State for %s (state: %s-->%s)", this.accessory.displayName, this.circuitState, circuitState)
     this.circuitState = circuitState;
 
     // since this is being called internally (via the socket initiation), call the function that will call the callback
-  //this.accessory.getService(Service.Switch).setCharacteristic(Characteristic.On, circuitState)  // DO NOT USE - creates an infinite loop
+  //this.accessory.getService(Service.Lightbulb).setCharacteristic(Characteristic.On, circuitState) // DO NOT USE - creates an infinite loop
 
-   // this.accessory.getService(Service.Switch).getCharacteristic(Characteristic.On).setValue(circuitState) // works
-    this.accessory.getService(Service.Switch).getCharacteristic(Characteristic.On).updateValue(circuitState); // works
+   // this.accessory.getService(Service.Lightbulb).getCharacteristic(Characteristic.On).setValue(circuitState) // works
+    this.accessory.getService(Service.Lightbulb).getCharacteristic(Characteristic.On).updateValue(circuitState); // works
     //this.service.getCharacteristic(Characteristic.On).setValue(this.circuitState); // works
 
   } else {

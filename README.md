@@ -4,6 +4,7 @@ PoolController plugin for homebridge: https://github.com/nfarina/homebridge
 
 
 ##This version differs from the first by:
+1. Accessory will auto discover IP of nodejs-poolController (but you can still hard code the IP)
 1. Lights are now displayed as lights, circuits remain as switches.
 1. Heaters in HomeKit will no longer turn on/off the circuits they are associated with.
 1. Heater modes map as follows: Off=Off; Heat=Heater; Cool=Solar Preferred; Auto=Solar
@@ -12,7 +13,19 @@ PoolController plugin for homebridge: https://github.com/nfarina/homebridge
 
 Requires PoolController: https://github.com/tagyoureit/nodejs-poolController
 
-Example config:
+Example config using SSDP/UPnP:
+
+    "platforms": [
+         {
+          "platform": "PoolControllerPlatform",
+          "name": "Pool Controller",
+          "ip_address": "*",
+          "secure": "false"
+        }
+    ]
+
+
+Example config using static IP:
 
     "platforms": [
          {

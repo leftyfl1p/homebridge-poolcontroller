@@ -1,5 +1,6 @@
 var Accessory, Service, Characteristic, UUIDGen, Homebridge;
 var io = require('socket.io-client');
+var ssdp = require('node-ssdp').Client
 var socket;
 var debug = false;
 var circuitAccessory = require('./circuitAccessory.js');
@@ -40,10 +41,70 @@ function PoolControllerPlatform(log, config, api) {
 
     if (api) {
         self.api = api;
-        self.api.on('didFinishLaunching', self.socketInit.bind(this));
+        self.api.on('didFinishLaunching', self.SSDPDiscovery.bind(this));
     }
 
 }
+
+PoolControllerPlatform.prototype.SSDPDiscovery = function () {
+    var self = this
+    var elapsedTime = 0;
+    if (self.config.ip_address === '*') {
+        var client = new ssdp({})
+        self.log('Starting UPnP search for PoolController.')
+
+        client.on('response', function inResponse(headers, code, rinfo) {
+            //console.log('Got a response to an m-search:\n%d\n%s\n%s', code, JSON.stringify(headers, null, '  '), JSON.stringify(rinfo, null, '  '))
+            if (headers.ST === 'urn:schemas-upnp-org:device:PoolController:1') {
+                self.config.ip_address = headers.LOCATION.replace('/device','');
+                self.log('Found nodejs-poolController at %s.', self.config.ip_address)
+                client.stop()
+                clearTimeout(timer)
+                self.validateVersion(headers.LOCATION)
+            }
+        })
+
+        client.search('urn:schemas-upnp-org:device:PoolController:1')
+
+        //Or maybe if you want to scour for everything after 5 seconds
+        timer = setInterval(function () {
+            elapsedTime += 5;
+            client.search('urn:schemas-upnp-org:device:PoolController:1')
+            self.log('Can not find nodejs-PoolController after %s seconds.', elapsedTime)
+        }, 5000)
+
+
+    }
+}
+
+PoolControllerPlatform.prototype.validateVersion = function (URL) {
+    var self = this;
+    var request = require('request')
+        , valid = false
+        , validMajor = 4
+        , validMinor = 1
+    request(URL, function (error, response, body) {
+        if (error)
+            self.log('Error retrieving configuration from poolController.', error)
+        else {
+            var major = parseInt(body.match("<major>(.*)</major>")[1])
+            var minor = parseInt(body.match("<minor>(.*)</minor>")[1])
+            if (major > validMajor)
+                valid = true
+            else if (major === validMajor && minor >= validMinor)
+                valid = true
+            if (valid)
+                self.socketInit()
+            else {
+                self.log.error('Version of poolController %s.%s does not meet the minimum for this Homebridge plugin %s.%s', major, minor, validMajor, validMinor)
+                process.exit()
+            }
+        }
+    })
+
+
+}
+
 
 PoolControllerPlatform.prototype.socketInit = function () {
     var self = this;
@@ -180,7 +241,7 @@ PoolControllerPlatform.prototype.socketTemperatureUpdated = function (temperatur
     temperatureData = temperatureData.temperature
     for (var uuid in this.accessories) {
         //console.log("Analyzing temperature %s of %s", i, Object.keys(temperatureData).length)
-        if ((this.accessories[uuid].accessory.displayName).includes('Heater')){
+        if ((this.accessories[uuid].accessory.displayName).includes('Heater')) {
             this.accessories[uuid].updateTemperatureState(temperatureData); // All heaters should have a temperature state associated to them.
         }
     }
@@ -232,3 +293,4 @@ PoolControllerPlatform.prototype.addHeaterAccessory = function (log, identifier,
     this.accessories[uuid] = new heaterAccessory(log, accessory, type, circuit, circuitState, heatMode, targetHeatingCoolingState, currentTemperature, targetTemperature, Homebridge, socket);
     this.api.registerPlatformAccessories("homebridge-PoolControllerPlatform", "PoolControllerPlatform", [accessory]);
 };
+

@@ -73,7 +73,8 @@ PoolControllerPlatform.prototype.SSDPDiscovery = function () {
             self.log('Can not find nodejs-PoolController after %s seconds.', elapsedTime)
         }, 5000)
 
-
+    } else {
+      self.validateVersion(self.config.ip_address + "/device");
     }
 }
 

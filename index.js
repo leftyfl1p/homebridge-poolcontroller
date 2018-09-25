@@ -73,7 +73,8 @@ PoolControllerPlatform.prototype.SSDPDiscovery = function () {
             self.log('Can not find nodejs-PoolController after %s seconds.', elapsedTime)
         }, 5000)
 
-
+    } else {
+      self.validateVersion(self.config.ip_address + "/device");
     }
 }
 
@@ -293,4 +294,3 @@ PoolControllerPlatform.prototype.addHeaterAccessory = function (log, identifier,
     this.accessories[uuid] = new heaterAccessory(log, accessory, type, circuit, circuitState, heatMode, targetHeatingCoolingState, currentTemperature, targetTemperature, Homebridge, socket);
     this.api.registerPlatformAccessories("homebridge-PoolControllerPlatform", "PoolControllerPlatform", [accessory]);
 };
-
